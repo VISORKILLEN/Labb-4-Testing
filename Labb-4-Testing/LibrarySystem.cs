@@ -1,6 +1,6 @@
 ﻿namespace Labb_4_Testing
 {
-    internal class LibrarySystem
+    public class LibrarySystem
     {
         private List<Book> books;
 
