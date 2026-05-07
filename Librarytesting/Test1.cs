@@ -76,9 +76,9 @@ namespace Librarytesting
         [TestMethod]
         public void ReturnBook_ShouldReturnTrue()
         {
-            _library.BorrowBook("9780451524935");
+            _library.BorrowBook("111");
 
-            bool result = _library.ReturnBook("9780451524935");
+            bool result = _library.ReturnBook("111");
 
             Assert.IsTrue(result);
         }
@@ -86,7 +86,33 @@ namespace Librarytesting
         [TestMethod]
         public void ReturnBook_NotBorrowed_ShouldReturnFalse()
         {
-            bool result = _library.ReturnBook("9780451524935");
+            bool result = _library.ReturnBook("111");
+
+            Assert.IsFalse(result);
+        }
+
+        //Late fee tests
+        [TestMethod]
+        public void CalculateLateFee_ShouldReturnZero_WhenNotLate()
+        {
+            decimal fee = _library.CalculateLateFee("123", 0);
+
+            Assert.AreEqual(0, fee);
+        }
+
+        [TestMethod]
+        public void CalculateLateFee_ShouldReturnFee_WhenLate()
+        {
+            decimal fee = _library.CalculateLateFee("123", 5);
+
+            Assert.IsTrue(fee > 0);
+        }
+
+        //Check if Overdue test
+        [TestMethod]
+        public void IsBookOverdue_ShouldReturnFalse_IfNotBorrowedLong()
+        {
+            bool result = _library.IsBookOverdue("111", 100);
 
             Assert.IsFalse(result);
         }
