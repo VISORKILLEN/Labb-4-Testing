@@ -52,5 +52,43 @@ namespace Librarytesting
             var result = _library.SearchByISBN("111");
             Assert.IsNotNull(result);
         }
+
+        //Borrow book tests
+        [TestMethod]
+        public void BorrowBook_ShouldReturnBookIfFound()
+        {
+            bool result = _library.BorrowBook("111");
+
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void BorrowBook_AlreadyBorrowed_ShouldReturnFalse()
+        {
+            _library.BorrowBook("111");
+
+            bool result = _library.BorrowBook("111");
+
+            Assert.IsFalse(result);
+        }
+
+        //Return Books tests
+        [TestMethod]
+        public void ReturnBook_ShouldReturnTrue()
+        {
+            _library.BorrowBook("9780451524935");
+
+            bool result = _library.ReturnBook("9780451524935");
+
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void ReturnBook_NotBorrowed_ShouldReturnFalse()
+        {
+            bool result = _library.ReturnBook("9780451524935");
+
+            Assert.IsFalse(result);
+        }
     }
 }
