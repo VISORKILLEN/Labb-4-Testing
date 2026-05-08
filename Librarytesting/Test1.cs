@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Librarytesting
 {
     [TestClass]
-    public sealed class LibraryTests
+    public class LibraryTests
     {
         private LibrarySystem? _library;
 
@@ -14,107 +14,130 @@ namespace Librarytesting
             _library = new LibrarySystem();
         }
 
-        //AddBook Test
+        // Add book tests
 
         [TestMethod]
-        public void AddBook_ShouldAddBookToLibrary()
+        public void AddBook_ShouldAddBook()
         {
-            var book = new Book("Test Book", "Test Author", "111", 2024);
+            var book = new Book("Test", "Author", "999", 2024);
 
             bool result = _library!.AddBook(book);
 
             Assert.IsTrue(result);
         }
 
-        //RemoveBook Test
         [TestMethod]
-        public void RemoveBook_ShouldRemoveBookFromLibrary()
+        public void AddBook_ShouldReturnFalse_IfDuplicateISBN()
         {
-            var book = new Book("Test Book", "Test Author", "111", 2024);
+            var book1 = new Book("Book1", "Author1", "999", 2024);
+            var book2 = new Book("Book2", "Author2", "999", 2024);
+
+            _library!.AddBook(book1);
+
+            bool result = _library.AddBook(book2);
+
+            Assert.IsFalse(result);
+        }
+
+        [TestMethod]
+        public void AddBook_ShouldReturnFalse_IfISBNIsEmpty()
+        {
+            var book = new Book("Test", "Author", "", 2024);
+
+            bool result = _library!.AddBook(book);
+
+            Assert.IsFalse(result);
+        }
+
+        // Remove books tests
+
+        [TestMethod]
+        public void RemoveBook_ShouldReturnTrue()
+        {
+            var book = new Book("Test", "Author", "111", 2024);
+
             _library!.AddBook(book);
 
             bool result = _library.RemoveBook("111");
+            
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void RemoveBook_ShouldReturnFalse_IfBorrowed()
+        {
+            var book = new Book("Test", "Author", "222", 2024);
+
+            _library!.AddBook(book);
+
+            _library.BorrowBook("222");
+
+            bool result = _library.RemoveBook("222");
+
+            Assert.IsFalse(result);
+        }
+
+        // Search tests
+
+        [TestMethod]
+        public void SearchByTitle_ShouldSupportPartialMatch()
+        {
+            var result = _library!.SearchByTitle("Hob");
+
+            Assert.AreEqual(1, result.Count);
+        }
+
+        [TestMethod]
+        public void SearchByTitle_ShouldBeCaseInsensitive()
+        {
+            var result = _library!.SearchByTitle("the hobbit");
+
+            Assert.AreEqual(1, result.Count);
+        }
+
+        // Borrow tests
+
+        [TestMethod]
+        public void BorrowBook_ShouldReturnTrue()
+        {
+            bool result = _library!.BorrowBook("9780451524935");
 
             Assert.IsTrue(result);
         }
 
         [TestMethod]
-        public void RemoveBook_ShouldReturnFalseIfBookNotFound()
+        public void BorrowBook_ShouldReturnFalse_IfAlreadyBorrowed()
         {
-            bool result = _library!.RemoveBook("doesnotxist");
-            Assert.IsFalse(result);
-        }
+            _library!.BorrowBook("9780451524935");
 
-        //SearchByISBN Test
-        [TestMethod]
-        public void SearchByISBN_ShouldReturnBookIfFound()
-        {
-            var result = _library.SearchByISBN("111");
-            Assert.IsNotNull(result);
-        }
-
-        //Borrow book tests
-        [TestMethod]
-        public void BorrowBook_ShouldReturnBookIfFound()
-        {
-            bool result = _library.BorrowBook("111");
-
-            Assert.IsTrue(result);
-        }
-
-        [TestMethod]
-        public void BorrowBook_AlreadyBorrowed_ShouldReturnFalse()
-        {
-            _library.BorrowBook("111");
-
-            bool result = _library.BorrowBook("111");
+            bool result = _library.BorrowBook("9780451524935");
 
             Assert.IsFalse(result);
         }
 
-        //Return Books tests
+        // Return test
+
         [TestMethod]
-        public void ReturnBook_ShouldReturnTrue()
+        public void ReturnBook_ShouldResetBorrowDate()
         {
-            _library.BorrowBook("111");
+            _library!.BorrowBook("9780451524935");
 
-            bool result = _library.ReturnBook("111");
+            _library.ReturnBook("9780451524935");
 
-            Assert.IsTrue(result);
+            var book = _library.SearchByISBN("9780451524935");
+
+            Assert.IsNull(book!.BorrowDate);
         }
 
-        [TestMethod]
-        public void ReturnBook_NotBorrowed_ShouldReturnFalse()
-        {
-            bool result = _library.ReturnBook("111");
-
-            Assert.IsFalse(result);
-        }
-
-        //Late fee tests
-        [TestMethod]
-        public void CalculateLateFee_ShouldReturnZero_WhenNotLate()
-        {
-            decimal fee = _library.CalculateLateFee("123", 0);
-
-            Assert.AreEqual(0, fee);
-        }
+        // Late fees test
 
         [TestMethod]
-        public void CalculateLateFee_ShouldReturnFee_WhenLate()
+        public void CalculateLateFee_ShouldCalculateCorrectly()
         {
-            decimal fee = _library.CalculateLateFee("123", 5);
+            decimal fee =
+                _library!.CalculateLateFee("9780451524935", 4);
 
-            Assert.IsTrue(fee > 0);
-        }
-
-        //Check if Overdue test
-        [TestMethod]
-        public void IsBookOverdue_ShouldReturnFalse_IfNotBorrowedLong()
-        {
-            bool result = _library.IsBookOverdue("111", 100);
-
-            Assert.IsFalse(result);
+            Assert.AreEqual(2.0m, fee);
         }
     }
 }
