@@ -7,7 +7,7 @@
         public LibrarySystem()
         {
             books = new List<Book>();
-            // Add some initial books
+
             books.Add(new Book("1984", "George Orwell", "9780451524935", 1949));
             books.Add(new Book("To Kill a Mockingbird", "Harper Lee", "9780061120084", 1960));
             books.Add(new Book("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565", 1925));
@@ -20,6 +20,18 @@
 
         public bool AddBook(Book book)
         {
+            if (string.IsNullOrWhiteSpace(book.ISBN))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(book.Title))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(book.Author))
+                return false;
+
+            if (books.Any(b => b.ISBN == book.ISBN))
+                return false;
+
             books.Add(book);
             return true;
         }
@@ -27,50 +39,64 @@
         public bool RemoveBook(string isbn)
         {
             Book book = SearchByISBN(isbn);
-            if (book != null)
-            {
-                books.Remove(book);
-                return true;
-            }
-            return false;
+
+            if (book == null)
+                return false;
+
+            if (book.IsBorrowed)
+                return false;
+
+            books.Remove(book);
+            return true;
         }
 
         public Book SearchByISBN(string isbn)
         {
-            return books.FirstOrDefault(b => b.ISBN == isbn);
+            return books.FirstOrDefault(b =>
+                b.ISBN.Contains(isbn,
+                StringComparison.OrdinalIgnoreCase));
         }
 
         public List<Book> SearchByTitle(string title)
         {
-            return books.Where(b => b.Title == title).ToList();
+            return books.Where(b =>
+                b.Title.Contains(title,
+                StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
         public List<Book> SearchByAuthor(string author)
         {
-            return books.Where(b => b.Author.Contains(author, StringComparison.OrdinalIgnoreCase)).ToList();
+            return books.Where(b =>
+                b.Author.Contains(author,
+                StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
         public bool BorrowBook(string isbn)
         {
             Book book = SearchByISBN(isbn);
-            if (book != null && !book.IsBorrowed)
-            {
-                book.IsBorrowed = true;
-                book.BorrowDate = DateTime.Now;
-                return true;
-            }
-            return false;
+
+            if (book == null || book.IsBorrowed)
+                return false;
+
+            book.IsBorrowed = true;
+            book.BorrowDate = DateTime.Now;
+
+            return true;
         }
 
         public bool ReturnBook(string isbn)
         {
             Book book = SearchByISBN(isbn);
-            if (book != null && book.IsBorrowed)
-            {
-                book.IsBorrowed = false;
-                return true;
-            }
-            return false;
+
+            if (book == null || !book.IsBorrowed)
+                return false;
+
+            book.IsBorrowed = false;
+            book.BorrowDate = null;
+
+            return true;
         }
 
         public List<Book> GetAllBooks()
@@ -84,21 +110,29 @@
                 return 0;
 
             Book book = SearchByISBN(isbn);
+
             if (book == null)
                 return 0;
 
             decimal feePerDay = 0.5m;
-            return daysLate + feePerDay;
+
+            return daysLate * feePerDay;
         }
 
         public bool IsBookOverdue(string isbn, int loanPeriodDays)
         {
             Book book = SearchByISBN(isbn);
-            if (book != null && book.IsBorrowed && book.BorrowDate.HasValue)
+
+            if (book != null &&
+                book.IsBorrowed &&
+                book.BorrowDate.HasValue)
             {
-                TimeSpan borrowedFor = DateTime.Now - book.BorrowDate.Value;
+                TimeSpan borrowedFor =
+                    DateTime.Now - book.BorrowDate.Value;
+
                 return borrowedFor.Days > loanPeriodDays;
             }
+
             return false;
         }
     }
